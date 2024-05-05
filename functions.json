@@ -1,0 +1,154 @@
+{
+  "Glob": {
+    "accessPath": [
+      "Glob"
+    ],
+    "signature": [
+      "pattern",
+      "opts"
+    ],
+    "definition": "class Glob {\n    absolute;\n    cwd;\n    root;\n    dot;\n    dotRelative;\n    follow;\n    ignore;\n    magicalBraces;\n    mark;\n    matchBase;\n    maxDepth;\n    nobrace;\n    nocase;\n    nodir;\n    noext;\n    noglobstar;\n    pattern;\n    platform;\n    realpath;\n    scurry;\n    stat;\n    signal;\n    windowsPathsNoEscape;\n    withFileTypes;\n    /**\n     * The options provided to the constructor.\n     */\n    opts;\n    /**\n     * An array of parsed immutable {@link Pattern} objects.\n     */\n    patterns;\n    /**\n     * All options are stored as properties on the `Glob` object.\n     *\n     * See {@link GlobOptions} for full options descriptions.\n     *\n     * Note that a previous `Glob` object can be passed as the\n     * `GlobOptions` to another `Glob` instantiation to re-use settings\n     * and caches with a new pattern.\n     *\n     * Traversal functions can be called multiple times to run the walk\n     * again.\n     */\n    constructor(pattern, opts) {\n        /* c8 ignore start */\n        if (!opts)\n            throw new TypeError('glob options required');\n        /* c8 ignore stop */\n        this.withFileTypes = !!opts.withFileTypes;\n        this.signal = opts.signal;\n        this.follow = !!opts.follow;\n        this.dot = !!opts.dot;\n        this.dotRelative = !!opts.dotRelative;\n        this.nodir = !!opts.nodir;\n        this.mark = !!opts.mark;\n        if (!opts.cwd) {\n            this.cwd = '';\n        }\n        else if (opts.cwd instanceof URL || opts.cwd.startsWith('file://')) {\n            opts.cwd = fileURLToPath(opts.cwd);\n        }\n        this.cwd = opts.cwd || '';\n        this.root = opts.root;\n        this.magicalBraces = !!opts.magicalBraces;\n        this.nobrace = !!opts.nobrace;\n        this.noext = !!opts.noext;\n        this.realpath = !!opts.realpath;\n        this.absolute = opts.absolute;\n        this.noglobstar = !!opts.noglobstar;\n        this.matchBase = !!opts.matchBase;\n        this.maxDepth =\n            typeof opts.maxDepth === 'number' ? opts.maxDepth : Infinity;\n        this.stat = !!opts.stat;\n        this.ignore = opts.ignore;\n        if (this.withFileTypes && this.absolute !== undefined) {\n            throw new Error('cannot set absolute and withFileTypes:true');\n        }\n        if (typeof pattern === 'string') {\n            pattern = [pattern];\n        }\n        this.windowsPathsNoEscape =\n            !!opts.windowsPathsNoEscape ||\n                opts.allowWindowsEscape === false;\n        if (this.windowsPathsNoEscape) {\n            pattern = pattern.map(p => p.replace(/\\\\/g, '/'));\n        }\n        if (this.matchBase) {\n            if (opts.noglobstar) {\n                throw new TypeError('base matching requires globstar');\n            }\n            pattern = pattern.map(p => (p.includes('/') ? p : `./**/${p}`));\n        }\n        this.pattern = pattern;\n        this.platform = opts.platform || defaultPlatform;\n        this.opts = { ...opts, platform: this.platform };\n        if (opts.scurry) {\n            this.scurry = opts.scurry;\n            if (opts.nocase !== undefined &&\n                opts.nocase !== opts.scurry.nocase) {\n                throw new Error('nocase option contradicts provided scurry option');\n            }\n        }\n        else {\n            const Scurry = opts.platform === 'win32'\n                ? PathScurryWin32\n                : opts.platform === 'darwin'\n                    ? PathScurryDarwin\n                    : opts.platform\n                        ? PathScurryPosix\n                        : PathScurry;\n            this.scurry = new Scurry(this.cwd, {\n                nocase: opts.nocase,\n                fs: opts.fs,\n            });\n        }\n        this.nocase = this.scurry.nocase;\n        // If you do nocase:true on a case-sensitive file system, then\n        // we need to use regexps instead of strings for non-magic\n        // path portions, because statting `aBc` won't return results\n        // for the file `AbC` for example.\n        const nocaseMagicOnly = this.platform === 'darwin' || this.platform === 'win32';\n        const mmo = {\n            // default nocase based on platform\n            ...opts,\n            dot: this.dot,\n            matchBase: this.matchBase,\n            nobrace: this.nobrace,\n            nocase: this.nocase,\n            nocaseMagicOnly,\n            nocomment: true,\n            noext: this.noext,\n            nonegate: true,\n            optimizationLevel: 2,\n            platform: this.platform,\n            windowsPathsNoEscape: this.windowsPathsNoEscape,\n            debug: !!this.opts.debug,\n        };\n        const mms = this.pattern.map(p => new Minimatch(p, mmo));\n        const [matchSet, globParts] = mms.reduce((set, m) => {\n            set[0].push(...m.set);\n            set[1].push(...m.globParts);\n            return set;\n        }, [[], []]);\n        this.patterns = matchSet.map((set, i) => {\n            const g = globParts[i];\n            /* c8 ignore start */\n            if (!g)\n                throw new Error('invalid pattern object');\n            /* c8 ignore stop */\n            return new Pattern(set, g, 0, this.platform);\n        });\n    }\n    async walk() {\n        // Walkers always return array of Path objects, so we just have to\n        // coerce them into the right shape.  It will have already called\n        // realpath() if the option was set to do so, so we know that's cached.\n        // start out knowing the cwd, at least\n        return [\n            ...(await new GlobWalker(this.patterns, this.scurry.cwd, {\n                ...this.opts,\n                maxDepth: this.maxDepth !== Infinity\n                    ? this.maxDepth + this.scurry.cwd.depth()\n                    : Infinity,\n                platform: this.platform,\n                nocase: this.nocase,\n            }).walk()),\n        ];\n    }\n    walkSync() {\n        return [\n            ...new GlobWalker(this.patterns, this.scurry.cwd, {\n                ...this.opts,\n                maxDepth: this.maxDepth !== Infinity\n                    ? this.maxDepth + this.scurry.cwd.depth()\n                    : Infinity,\n                platform: this.platform,\n                nocase: this.nocase,\n            }).walkSync(),\n        ];\n    }\n    stream() {\n        return new GlobStream(this.patterns, this.scurry.cwd, {\n            ...this.opts,\n            maxDepth: this.maxDepth !== Infinity\n                ? this.maxDepth + this.scurry.cwd.depth()\n                : Infinity,\n            platform: this.platform,\n            nocase: this.nocase,\n        }).stream();\n    }\n    streamSync() {\n        return new GlobStream(this.patterns, this.scurry.cwd, {\n            ...this.opts,\n            maxDepth: this.maxDepth !== Infinity\n                ? this.maxDepth + this.scurry.cwd.depth()\n                : Infinity,\n            platform: this.platform,\n            nocase: this.nocase,\n        }).streamSync();\n    }\n    /**\n     * Default sync iteration function. Returns a Generator that\n     * iterates over the results.\n     */\n    iterateSync() {\n        return this.streamSync()[Symbol.iterator]();\n    }\n    [Symbol.iterator]() {\n        return this.iterateSync();\n    }\n    /**\n     * Default async iteration function. Returns an AsyncGenerator that\n     * iterates over the results.\n     */\n    iterate() {\n        return this.stream()[Symbol.asyncIterator]();\n    }\n    [Symbol.asyncIterator]() {\n        return this.iterate();\n    }\n}"
+  },
+  "escape": {
+    "accessPath": [
+      "escape"
+    ],
+    "signature": [
+      "s",
+      "{ windowsPathsNoEscape = false",
+      "} = {}"
+    ],
+    "definition": "(s, { windowsPathsNoEscape = false, } = {}) => {\n    // don't need to escape +@! because we escape the parens\n    // that make those magic, and escaping ! as [!] isn't valid,\n    // because [!]] is a valid glob class meaning not ']'.\n    return windowsPathsNoEscape\n        ? s.replace(/[?*()[\\]]/g, '[$&]')\n        : s.replace(/[?*()[\\]\\\\]/g, '\\\\$&');\n}"
+  },
+  "glob": {
+    "accessPath": [
+      "glob"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "async function glob_(pattern, options = {}) {\n    return new Glob(pattern, options).walk();\n}"
+  },
+  "globIterate": {
+    "accessPath": [
+      "globIterate"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globIterate(pattern, options = {}) {\n    return new Glob(pattern, options).iterate();\n}"
+  },
+  "globIterateSync": {
+    "accessPath": [
+      "globIterateSync"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globIterateSync(pattern, options = {}) {\n    return new Glob(pattern, options).iterateSync();\n}"
+  },
+  "globStream": {
+    "accessPath": [
+      "globStream"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globStream(pattern, options = {}) {\n    return new Glob(pattern, options).stream();\n}"
+  },
+  "globStreamSync": {
+    "accessPath": [
+      "globStreamSync"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globStreamSync(pattern, options = {}) {\n    return new Glob(pattern, options).streamSync();\n}"
+  },
+  "globSync": {
+    "accessPath": [
+      "globSync"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globSync(pattern, options = {}) {\n    return new Glob(pattern, options).walkSync();\n}"
+  },
+  "hasMagic": {
+    "accessPath": [
+      "hasMagic"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "(pattern, options = {}) => {\n    if (!Array.isArray(pattern)) {\n        pattern = [pattern];\n    }\n    for (const p of pattern) {\n        if (new Minimatch(p, options).hasMagic())\n            return true;\n    }\n    return false;\n}"
+  },
+  "iterate": {
+    "accessPath": [
+      "iterate"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globIterate(pattern, options = {}) {\n    return new Glob(pattern, options).iterate();\n}"
+  },
+  "iterateSync": {
+    "accessPath": [
+      "iterateSync"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globIterateSync(pattern, options = {}) {\n    return new Glob(pattern, options).iterateSync();\n}"
+  },
+  "stream": {
+    "accessPath": [
+      "stream"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globStream(pattern, options = {}) {\n    return new Glob(pattern, options).stream();\n}"
+  },
+  "streamSync": {
+    "accessPath": [
+      "streamSync"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globStreamSync(pattern, options = {}) {\n    return new Glob(pattern, options).streamSync();\n}"
+  },
+  "sync": {
+    "accessPath": [
+      "sync"
+    ],
+    "signature": [
+      "pattern",
+      "options = {}"
+    ],
+    "definition": "function globSync(pattern, options = {}) {\n    return new Glob(pattern, options).walkSync();\n}"
+  },
+  "unescape": {
+    "accessPath": [
+      "unescape"
+    ],
+    "signature": [
+      "s",
+      "{ windowsPathsNoEscape = false",
+      "} = {}"
+    ],
+    "definition": "(s, { windowsPathsNoEscape = false, } = {}) => {\n    return windowsPathsNoEscape\n        ? s.replace(/\\[([^\\/\\\\])\\]/g, '$1')\n        : s.replace(/((?!\\\\).|^)\\[([^\\/\\\\])\\]/g, '$1$2').replace(/\\\\([^\\/])/g, '$1');\n}"
+  }
+}
