@@ -8,8 +8,8 @@ var Queue = require("./queue");
 function Async() {
     this._customScheduler = false;
     this._isTickUsed = false;
-    this._lateQueue = new Queue(LATE_QUEUE_CAPACITY);
-    this._normalQueue = new Queue(NORMAL_QUEUE_CAPACITY);
+    this._lateQueue = new Queue(16);
+    this._normalQueue = new Queue(16);
     this._haveDrainedQueues = false;
     var self = this;
     this.drainQueues = function () {
@@ -44,7 +44,6 @@ Async.prototype.fatalError = function(e, isNode) {
     }
 };
 
-// Must be used if fn can throw
 Async.prototype.throwLater = function(fn, arg) {
     if (arguments.length === 1) {
         arg = fn;
@@ -59,20 +58,20 @@ Async.prototype.throwLater = function(fn, arg) {
             fn(arg);
         });
     } catch (e) {
-        throw new Error(NO_ASYNC_SCHEDULER);
+        throw new Error("No async scheduler available\u000a\u000a    See http://goo.gl/MqrFmX\u000a");
     }
 };
 
-//When the fn absolutely needs to be called after
-//the queue has been completely flushed
 function AsyncInvokeLater(fn, receiver, arg) {
-    ASSERT(arguments.length === 3);
+    ASSERT((arguments.length === 3),
+        "arguments.length === 3");
     this._lateQueue.push(fn, receiver, arg);
     this._queueTick();
 }
 
 function AsyncInvoke(fn, receiver, arg) {
-    ASSERT(arguments.length === 3);
+    ASSERT((arguments.length === 3),
+        "arguments.length === 3");
     this._normalQueue.push(fn, receiver, arg);
     this._queueTick();
 }
@@ -93,8 +92,6 @@ function _drainQueue(queue) {
     }
 }
 
-// Shift the queue in a separate function to allow
-// garbage collection after each step
 function _drainQueueStep(queue) {
     var fn = queue.shift();
     if (typeof fn !== "function") {
@@ -107,7 +104,6 @@ function _drainQueueStep(queue) {
 }
 
 Async.prototype._drainQueues = function () {
-    ASSERT(this._isTickUsed);
     _drainQueue(this._normalQueue);
     this._reset();
     this._haveDrainedQueues = true;

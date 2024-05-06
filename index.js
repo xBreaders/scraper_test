@@ -98,8 +98,10 @@ class FunctionMiner {
             const stat = fs.statSync(itemPath);
 
             if (stat.isDirectory()) {
-                files.push(...this.findAllJSFiles(itemPath));
-            } else if (path.extname(itemPath) === '.js' && (!itemPath.includes('test') || !itemPath.includes('benchmark') || !itemPath.includes('examples'))) {
+                if (item !== 'node_modules') { // Exclude the node_modules directory
+                    files.push(...this.findAllJSFiles(itemPath));
+                }
+            } else if (path.extname(itemPath) === '.js' && (itemPath.includes('\\test\\') === false && itemPath.includes('benchmark') === false && itemPath.includes('examples') === false && itemPath.includes("coverage") === false)) {
                 files.push(itemPath);
             }
         }
@@ -111,12 +113,21 @@ class FunctionMiner {
         const fileContent = fs.readFileSync(filePath, 'utf-8');
         const ast = this.parseJS(fileContent);
 
+        const declarations = new Map();
+
         walk(ast, {
             enter: (node, parent) => {
-                if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
+                if (node.type === 'VariableDeclaration') {
+                    for (const declaration of node.declarations) {
+                        if (declaration.id.type === 'Identifier') {
+                            declarations.set(declaration.id.name, generate(declaration));
+                        }
+                    }
+                } else if (node.type === 'ImportDeclaration') {
+                    declarations.set(node.source.value, generate(node));
+                } else if (node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression') {
                     const functionName = node.id ? node.id.name : '(anonymous)';
                     const params = node.params.map(p => p.name);
-
                     let functionBody = null;
                     if (node.body.type === 'BlockStatement') {
                         functionBody = generate(node.body);
@@ -124,10 +135,36 @@ class FunctionMiner {
                         functionBody = generate(node.body);
                     }
 
+                    // Create a new node for the function declaration
+                    const functionDeclarationNode = {
+                        type: node.type,
+                        id: node.id,
+                        params: node.params,
+                        body: {
+                            type: 'BlockStatement',
+                            body: [],
+                        },
+                    };
+
+                    // Generate the function declaration
+                    const functionDeclaration = generate(functionDeclarationNode);
+
+                    // Find used declarations
+                    const usedDeclarations = new Map();
+                    walk(node, {
+                        enter: (node) => {
+                            if (node.type === 'Identifier' && declarations.has(node.name)) {
+                                usedDeclarations.set(node.name, declarations.get(node.name));
+                            }
+                        },
+                    });
+
                     this.minedFunctions[functionName] = {
                         params,
                         body: functionBody,
-                        // ... extract other information for later (params) ...
+                        functionDeclaration, // Add the function declaration here
+                        filePath,
+                        usedDeclarations: Array.from(usedDeclarations.values()),
                     };
                 }
             },
@@ -169,4 +206,4 @@ for (const functionKey in functions) {
     }
 }
 
-fs.writeFileSync('functions_with_snippets.json', JSON.stringify(functionsWithSnippets, null, 2));
+fs.writeFileSync('scraper_output/functions_with_snippets.json', JSON.stringify(functionsWithSnippets, null, 2));

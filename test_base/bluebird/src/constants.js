@@ -1,6 +1,6 @@
 //This is pretty lame but what you gonna do
 
-//async.js
+//async.test.js
 CONSTANT(LATE_QUEUE_CAPACITY, 16);
 CONSTANT(NORMAL_QUEUE_CAPACITY, 16);
 

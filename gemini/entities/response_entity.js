@@ -56,9 +56,12 @@ export class Prompt {
     constructor() {
         this.Prompt = {
             taskDescription: "",
+            filePath: "",
             codeContext: {
                 codeSnippet: "",
-                functionDescription: ""
+                functionDescription: "",
+                functionDeclaration: "",
+                DeclarationsOutsideOfFunction: ""
             }
         };
     }
@@ -68,7 +71,8 @@ export class Prompt {
     }
 
     setCodeSnippet(code) {
-        this.Prompt.codeContext.codeSnippet = code;
+        // Remove all newline characters
+        this.Prompt.codeContext.codeSnippet = code.replace(/\n/g, '');
     }
 
     setFunctionDescription(params) {
@@ -78,9 +82,20 @@ export class Prompt {
         }
         this.Prompt.codeContext.functionDescription = `Parameters: ${params.join(', ')}`;
     }
+    setFunctionDeclaration(declaration) {
+        this.Prompt.codeContext.functionDeclaration = declaration;
+    }
 
     getPrompt() {
         return this.Prompt;
+    }
+
+    setFilePath(filePath) {
+        this.Prompt.filePath = filePath;
+    }
+
+    setDeclarationsOutsideOfFunction(declarations) {
+        this.Prompt.codeContext.DeclarationsOutsideOfFunction = declarations;
     }
 }
 

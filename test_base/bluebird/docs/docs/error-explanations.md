@@ -93,7 +93,7 @@ Example:
 function returnThree(){ return 3;}
 
 Promise.resolve(5).map(returnThree).then(function(val){
-     console.log("Hello Value!",val); 
+     console.log("Hello Value!",val);
 });
 ```
 
@@ -103,7 +103,7 @@ The `map` operation is expecting an array here (or a promise on one) and instead
 function returnThree(){ return 3;}
 
 Promise.resolve([5]).map(returnThree).then(function(val){
-     console.log("Hello Value!",val); 
+     console.log("Hello Value!",val);
 });
 ```
 ```map``` is given an array with a single element (see ```[5]``` instead of ```5```), so this statement will work (but is bad practice).
@@ -310,13 +310,13 @@ This happens when a non object value or a promise that resolves with something t
 
 ## Error: Cannot promisify an API that has normal methods
 
-This error indicates you have tried to call [Promise.promisifyAll](.) on an object that already has a property with the `Async` suffix:
+This error indicates you have tried to call [Promise.promisifyAll](.) on an object that already has a property with the `AsyncTest` suffix:
 
 ```js
 var myApi = { foo: function(cb){ ... }, fooAsync(cb) { ... }
 ```
 
-This is because Bluebird adds the `Async` suffix to distinguish the original method from the promisified one, so `fooAsync` would have been overridden. In order to avoid this - either rename `fooAsync` before promisifying the API, or call [Promise.promisify](.) manually on select properties.
+This is because Bluebird adds the `AsyncTest` suffix to distinguish the original method from the promisified one, so `fooAsync` would have been overridden. In order to avoid this - either rename `fooAsync` before promisifying the API, or call [Promise.promisify](.) manually on select properties.
 
 You may also use the custom suffix option to choose another suffix that doesn't result in conflicts.
 
@@ -342,7 +342,7 @@ Please see the API docs of [.catch()](.) on how to use predicate catches.
 
 ## Error: No async scheduler available
 
-Async scheduler is a function that takes a callback function and calls the callback function as soon as possible, but asynchronously. For example `setTimeout`.
+AsyncTest scheduler is a function that takes a callback function and calls the callback function as soon as possible, but asynchronously. For example `setTimeout`.
 
 By default bluebird only tries a few common async schedulers, such as `setTimeout`, `process.nextTick` and `MutationObserver`. However if your JavaScript runtime environment doesn't expose any of these, you will see this error.
 

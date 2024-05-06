@@ -1,0 +1,523 @@
+{
+  "any": {
+    "params": [
+      "promises"
+    ],
+    "body": "{\n  var ret = new SomePromiseArray(promises);\n  var promise = ret.promise();\n  ASSERT(promise.isPending());\n  ASSERT(ret instanceof SomePromiseArray);\n  ret.setHowMany(1);\n  ret.setUnwrap();\n  ret.init();\n  return promise;\n}",
+    "functionDeclaration": "function any(promises) {}",
+    "filePath": "test_base\\bluebird\\src\\any.js",
+    "usedDeclarations": [
+      "SomePromiseArray = Promise._SomePromiseArray",
+      "ASSERT = require(\"./assert\")"
+    ],
+    "snippets": [
+      "Promise.any(Iterable<any>|Promise<Iterable<any>> input) -> Promise\n"
+    ],
+    "comments": []
+  },
+  "assert": {
+    "params": [
+      "boolExpr",
+      "message"
+    ],
+    "body": "{\n  if (boolExpr === true) return;\n  if (typeof boolExpr === \"string\" && boolExpr.charAt(0) === \"%\") {\n    var nativeCallName = boolExpr;\n    var $_len = arguments.length;\n    var args = new Array(Math.max($_len - 2, 0));\n    for (var $_i = 2; $_i < $_len; ++$_i) {\n      args[$_i - 2] = arguments[$_i];\n    }\n    ;\n    if (nativeAssert(nativeCallName, args, message) === message) return;\n    message = nativeCallName + \" !== \" + message;\n  }\n  var ret = new AssertionError(message);\n  if (Error.captureStackTrace) {\n    Error.captureStackTrace(ret, assert);\n  }\n  throw ret;\n}",
+    "functionDeclaration": "function assert(boolExpr, message) {}",
+    "filePath": "test_base\\bluebird\\src\\assert.js",
+    "usedDeclarations": [
+      "AssertionError = (function () {\n  function AssertionError(a) {\n    this.constructor$(a);\n    this.message = a;\n    this.name = \"AssertionError\";\n  }\n  AssertionError.prototype = new Error();\n  AssertionError.prototype.constructor = AssertionError;\n  AssertionError.prototype.constructor$ = Error;\n  return AssertionError;\n})()"
+    ],
+    "snippets": [],
+    "comments": []
+  },
+  "Async": {
+    "params": [],
+    "body": "{\n  this._customScheduler = false;\n  this._isTickUsed = false;\n  this._lateQueue = new Queue(16);\n  this._normalQueue = new Queue(16);\n  this._haveDrainedQueues = false;\n  var self = this;\n  this.drainQueues = function () {\n    self._drainQueues();\n  };\n  this._schedule = schedule;\n}",
+    "functionDeclaration": "function Async() {}",
+    "filePath": "test_base\\bluebird\\src\\async.js",
+    "usedDeclarations": [
+      "Queue = require(\"./queue\")",
+      "schedule = require(\"./schedule\")"
+    ],
+    "snippets": [
+      "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>AsyncTest Dislogs Example</title>\n  <script src=\"//cdn.jsdelivr.net/bluebird/{{ site.version }}/bluebird.js\"></script>\n  <script type=\"text/javascript\">\n    document.addEventListener('DOMContentLoaded', function() {\n      var time = document.getElementById('time-stamp');\n      clockTick();\n      setInterval(clockTick, 1000);\n      function clockTick() {\n        time.innerHTML = new Date().toLocaleTimeString();\n      }\n    });\n  </script>\n</head>\n<body>\n  <p>The current time is <span id=\"time-stamp\"></span>.</p>\n  <p>Your name is <span id=\"prompt\"></span>.</p>\n  <button id=\"action\">Set Name</button>\n</body>\n</html>\n",
+      "function promptPromise(message) {\n  return new Promise(function(resolve, reject) {\n    var result = window.prompt(message);\n    if (result != null) {\n      resolve(result);\n    } else {\n      reject(new Error('User cancelled'));\n    }\n  });\n}\n\nvar button = document.getElementById('action');\nvar output = document.getElementById('prompt');\n\nbutton.addEventListener('click', function() {\n  promptPromise('What is your name?')\n    .then(function(name) {\n      output.innerHTML = String(name);\n    })\n    .catch(function() {\n      output.innerHTML = '¯\\\\_(ツ)_/¯';\n    });\n});\n",
+      "<style type=\"text/css\">\n  #dialog {\n    width:      200px;\n    margin:     auto;\n    padding:    10px;\n    border:     thin solid black;\n    background: lightgreen;\n  }\n  .hidden {\n    display: none;\n  }\n</style>\n<div id=\"dialog\" class=\"hidden\">\n  <div class=\"message\">foobar</div>\n  <input type=\"text\">\n  <div>\n    <button class=\"ok\">Ok</button>\n    <button class=\"cancel\">Cancel</button>\n  </div>\n</div>\n",
+      "function promptPromise(message) {\n  var dialog       = document.getElementById('dialog');\n  var input        = dialog.querySelector('input');\n  var okButton     = dialog.querySelector('button.ok');\n  var cancelButton = dialog.querySelector('button.cancel');\n\n  dialog.querySelector('.message').innerHTML = String(message);\n  dialog.className = '';\n\n  return new Promise(function(resolve, reject) {\n    dialog.addEventListener('click', function handleButtonClicks(e) {\n      if (e.target.tagName !== 'BUTTON') { return; }\n      dialog.removeEventListener('click', handleButtonClicks);\n      dialog.className = 'hidden';\n      if (e.target === okButton) {\n        resolve(input.value);\n      } else {\n        reject(new Error('User cancelled'));\n      }\n    });\n  });\n}\n",
+      "return new Promise(function(resolve, reject) {\n  $('#okButton').on('click.promptDialog', function() {\n    resolve(input.value);\n  });\n  $('#cancelButton').on('click.promptDialog', reject);\n})\n.finally(function() {\n  $('#okButton').off('click.promptDialog');\n  $('#cancelButton').off('click.promptDialog');\n});\n",
+      "var noop = function() {\n  return this;\n};\n\nfunction Dialog() {\n  this.setCallbacks(noop, noop);\n}\nDialog.prototype.setCallbacks = function(okCallback, cancelCallback) {\n  this._okCallback     = okCallback;\n  this._cancelCallback = cancelCallback;\n  return this;\n};\nDialog.prototype.waitForUser = function() {\n  var _this = this;\n  return new Promise(function(resolve, reject) {\n    _this.setCallbacks(resolve, reject);\n  });\n};\nDialog.prototype.show = noop;\nDialog.prototype.hide = noop;\n",
+      "function PromptDialog() {\n  Dialog.call(this);\n  this.el           = document.getElementById('dialog');\n  this.inputEl      = this.el.querySelector('input');\n  this.messageEl    = this.el.querySelector('.message');\n  this.okButton     = this.el.querySelector('button.ok');\n  this.cancelButton = this.el.querySelector('button.cancel');\n  this.attachDomEvents();\n}\nPromptDialog.prototype = Object.create(Dialog.prototype);\nPromptDialog.prototype.attachDomEvents = function() {\n  var _this = this;\n  this.okButton.addEventListener('click', function() {\n    _this._okCallback(_this.inputEl.value);\n  });\n  this.cancelButton.addEventListener('click', function() {\n    _this._cancelCallback();\n  });\n};\nPromptDialog.prototype.show = function(message) {\n  this.messageEl.innerHTML = String(message);\n  this.el.className = '';\n  return this;\n};\nPromptDialog.prototype.hide = function() {\n  this.el.className = 'hidden';\n  return this;\n};\n",
+      "var output = document.getElementById('prompt');\nvar prompt = new PromptDialog();\n\nprompt.show('What is your name?')\n  .waitForUser()\n  .then(function(name) {\n    output.innerHTML = String(name);\n  })\n  .catch(function() {\n    output.innerHTML = '¯\\\\_(ツ)_/¯';\n  })\n  .finally(function() {\n    prompt.hide();\n  });\n",
+      "function NotifyDialog() {\n  Dialog.call(this);\n  var _this      = this;\n  this.el        = document.getElementById('notify-dialog');\n  this.messageEl = this.el.querySelector('.message');\n  this.okButton  = this.el.querySelector('button.ok');\n  this.okButton.addEventListener('click', function() {\n    _this._okCallback();\n  });\n}\nNotifyDialog.prototype = Object.create(Dialog.prototype);\nNotifyDialog.prototype.show = function(message) {\n  this.messageEl.innerHTML = String(message);\n  this.el.className = '';\n  return this;\n};\nNotifyDialog.prototype.show = function() {\n  this.el.className = 'hidden';\n  return this;\n};\n"
+    ],
+    "comments": []
+  },
+  "noConflict": {
+    "params": [],
+    "body": "{\n  try {\n    if (Promise === bluebird) Promise = old;\n  } catch (e) {}\n  return bluebird;\n}",
+    "functionDeclaration": "function noConflict() {}",
+    "filePath": "test_base\\bluebird\\src\\bluebird.js",
+    "usedDeclarations": [
+      "old"
+    ],
+    "snippets": [
+      "Promise.noConflict() -> Object\n",
+      "<!-- the other promise library must be loaded first -->\n<script type=\"text/javascript\" src=\"/scripts/other_promise.js\"></script>\n<script type=\"text/javascript\" src=\"/scripts/bluebird_debug.js\"></script>\n<script type=\"text/javascript\">\n//Release control right after\nvar Bluebird = Promise.noConflict();\n\n//Cast a promise from some other Promise library using the Promise namespace to Bluebird:\nvar promise = Bluebird.resolve(new Promise());\n</script>\n"
+    ],
+    "comments": []
+  },
+  "deprecated": {
+    "params": [
+      "name",
+      "replacement"
+    ],
+    "body": "{\n  var message = name + \" is deprecated and will be removed in a future version.\";\n  if (replacement) message += \" Use \" + replacement + \" instead.\";\n  return warn(message);\n}",
+    "functionDeclaration": "function deprecated(name, replacement) {}",
+    "filePath": "test_base\\bluebird\\src\\debuggability.js",
+    "usedDeclarations": [],
+    "snippets": [
+      "function delay(ms) {\n    var resolver = Promise.defer();\n    var now = Date.now();\n    setTimeout(function() {\n        resolver.resolve(Date.now() - now);\n    }, ms);\n    return resolver.promise;\n}\n\ndelay(500).then(function(ms) {\n    console.log(ms + \" ms passed\");\n});\n"
+    ],
+    "comments": []
+  },
+  "warn": {
+    "params": [
+      "message",
+      "shouldUseOwnTrace",
+      "promise"
+    ],
+    "body": "{\n  if (!config.warnings) return;\n  var warning = new Warning(message);\n  var ctx;\n  if (shouldUseOwnTrace) {\n    promise._attachExtraTrace(warning);\n  } else if (config.longStackTraces && (ctx = Promise._peekContext())) {\n    ctx.attachExtraTrace(warning);\n  } else {\n    var parsed = parseStackAndMessage(warning);\n    warning.stack = parsed.message + \"\\n\" + parsed.stack.join(\"\\n\");\n  }\n  if (!activeFireEvent(\"warning\", warning)) {\n    formatAndLogError(warning, \"\", true);\n  }\n}",
+    "functionDeclaration": "function warn(message, shouldUseOwnTrace, promise) {}",
+    "filePath": "test_base\\bluebird\\src\\debuggability.js",
+    "usedDeclarations": [
+      "message = name + \" is deprecated and will be removed in a future version.\"",
+      "promise = this",
+      "warnings = !!(util.env(\"BLUEBIRD_WARNINGS\") != 0 && (debugging || util.env(\"BLUEBIRD_WARNINGS\")))",
+      "Warning = require(\"./errors\").Warning",
+      "longStackTraces = !!(util.env(\"BLUEBIRD_LONG_STACK_TRACES\") != 0 && (debugging || util.env(\"BLUEBIRD_LONG_STACK_TRACES\")))",
+      "parsed = parseStackAndMessage(error)",
+      "stack = cleanStack(traceLines)",
+      "activeFireEvent = function (name) {\n  var globalEventFired = false;\n  try {\n    globalEventFired = fireGlobalEvent.apply(null, arguments);\n  } catch (e) {\n    async.throwLater(e);\n    globalEventFired = true;\n  }\n  var domEventFired = false;\n  try {\n    domEventFired = fireDomEvent(name, eventToObjectGenerator[name].apply(null, arguments));\n  } catch (e) {\n    async.throwLater(e);\n    domEventFired = true;\n  }\n  return domEventFired || globalEventFired;\n}"
+    ],
+    "snippets": [],
+    "comments": []
+  },
+  "OperationalError": {
+    "params": [
+      "message"
+    ],
+    "body": "{\n  if (!(this instanceof OperationalError)) return new OperationalError(message);\n  notEnumerableProp(this, \"name\", \"OperationalError\");\n  notEnumerableProp(this, \"message\", message);\n  this.cause = message;\n  this[OPERATIONAL_ERROR_KEY] = true;\n  if (message instanceof Error) {\n    notEnumerableProp(this, \"message\", message.message);\n    notEnumerableProp(this, \"stack\", message.stack);\n  } else if (Error.captureStackTrace) {\n    Error.captureStackTrace(this, this.constructor);\n  }\n}",
+    "functionDeclaration": "function OperationalError(message) {}",
+    "filePath": "test_base\\bluebird\\src\\errors.js",
+    "usedDeclarations": [
+      "notEnumerableProp = util.notEnumerableProp"
+    ],
+    "snippets": [
+      "new OperationalError(String message) -> OperationalError\n"
+    ],
+    "comments": []
+  },
+  "fail": {
+    "params": [
+      "reason"
+    ],
+    "body": "{\n  if (checkCancel(this, reason)) return;\n  errorObj.e = reason;\n  return errorObj;\n}",
+    "functionDeclaration": "function fail(reason) {}",
+    "filePath": "test_base\\bluebird\\src\\finally.js",
+    "usedDeclarations": [
+      "errorObj = util.errorObj"
+    ],
+    "snippets": [
+      "var argv = require('yargs')\n  .nargs('token', 1)\n  .parse(['--token', '-my-token']);\n",
+      "var yargs = require(\"yargs\")\n       .usage(\"$0 -operand1 number -operand2 number -operation [add|subtract]\");\nconsole.log(yargs.help());\n",
+      "var argv = require('yargs')\n  .version(function() {\n    return require('../package').version;\n  })\n  .argv;\n",
+      "#!/usr/bin/env node\nvar argv = require('yargs')\n    .usage('Count the lines in a file.\\nUsage: $0')\n    .demand('f')\n    .alias('f', 'file')\n    .describe('f', 'Load a file')\n    .showHelpOnFail(false, \"Specify --help for available options\")\n    .argv;\n\n// etc.\n",
+      "var yargs = require(\"yargs\")\n       .usage(\"$0 -operand1 number -operand2 number -operation [add|subtract]\");\nyargs.showHelp();\n",
+      "var argv = require('yargs')\n  .completion('completion', function(current, argv) {\n    // 'current' is the current command being completed.\n    // 'argv' is the parsed arguments so far.\n    // simply return an array of completions.\n    return [\n      'foo',\n      'bar'\n    ];\n  })\n  .argv;\n",
+      "var argv = require('yargs')\n  .completion('completion', function(current, argv, done) {\n    setTimeout(function() {\n      done([\n        'apple',\n        'banana'\n      ]);\n    }, 500);\n  })\n  .argv;\n"
+    ],
+    "comments": [
+      ".boolean(key)",
+      ".string(key)",
+      ".array(key)",
+      ".nargs(key, count)",
+      ".config(key)",
+      ".wrap(columns)",
+      ".strict()",
+      ".help([option, [description]])",
+      ".version(version, [option], [description])",
+      ".showHelpOnFail(enable, [message])",
+      ".showHelp(fn=console.error)",
+      ".completion(cmd, [description], [fn]);",
+      ".showCompletionScript()",
+      ".exitProcess(enable)",
+      ".parse(args)"
+    ]
+  },
+  "map": {
+    "params": [
+      "promises",
+      "fn",
+      "options",
+      "_filter"
+    ],
+    "body": "{\n  if (typeof fn !== \"function\") {\n    return apiRejection(FUNCTION_ERROR + util.classString(fn));\n  }\n  var limit = 0;\n  if (options !== undefined) {\n    if (typeof options === \"object\" && options !== null) {\n      if (typeof options.concurrency !== \"number\") {\n        return Promise.reject(new TypeError(\"'concurrency' must be a number but it is \" + util.classString(options.concurrency)));\n      }\n      limit = options.concurrency;\n    } else {\n      return Promise.reject(new TypeError(\"options argument must be an object but it is \" + util.classString(options)));\n    }\n  }\n  limit = typeof limit === \"number\" && isFinite(limit) && limit >= 1 ? limit : 0;\n  return new MappingPromiseArray(promises, fn, limit, _filter).promise();\n}",
+    "functionDeclaration": "function map(promises, fn, options, _filter) {}",
+    "filePath": "test_base\\bluebird\\src\\map.js",
+    "usedDeclarations": [
+      "util = require(\"./util\")",
+      "limit = this._limit",
+      "promise = this._promise"
+    ],
+    "snippets": [
+      "Promise.mapSeries(\n    Iterable<any>|Promise<Iterable<any>> input,\n    function(any value, int index, int arrayLength) mapper\n) -> Promise<Array<any>>\n",
+      "// The array to be mapped over can be a mix of values and promises.\nvar fileNames = [\"1.txt\", Promise.resolve(\"2.txt\"), \"3.txt\", Promise.delay(3000, \"4.txt\"), \"5.txt\"];\n\nPromise.mapSeries(fileNames, function(fileName, index, arrayLength) {\n    // The iteration will be performed sequentially, awaiting for any\n    // promises in the process.\n    return fs.readFileAsync(fileName).then(function(fileContents) {\n        // ...\n        return fileName + \"!\";\n    });\n}).then(function(result) {\n    // This will run after the last step is done\n    console.log(\"Done!\")\n    console.log(result); // [\"1.txt!\", \"2.txt!\", \"3.txt!\", \"4.txt!\", \"5.txt!\"]\n});\n",
+      "// If one of the promises in the original array rejects,\n// the iteration will stop once it reaches it\nvar items = [\"A\", Promise.delay(8000, \"B\"), Promise.reject(\"C\"), \"D\"];\n\nPromise.each(items, function(item) {\n    return Promise.delay(4000).then(function() {\n        console.log(\"On mapper: \" + item);\n    });\n}).then(function(result) {\n    // This not run\n}).catch(function(rejection) {\n    console.log(\"Catch: \" + rejection);\n});\n\n// The code above outputs the following after 12 seconds (not 16!):\n// On mapper: A\n// On mapper: B\n// Catch: C\n"
+    ],
+    "comments": []
+  },
+  "check": {
+    "params": [
+      "self",
+      "executor"
+    ],
+    "body": "{\n  if (self == null || self.constructor !== Promise) {\n    throw new TypeError(CONSTRUCT_ERROR_INVOCATION);\n  }\n  if (typeof executor !== \"function\") {\n    throw new TypeError(FUNCTION_ERROR + util.classString(executor));\n  }\n}",
+    "functionDeclaration": "function check(self, executor) {}",
+    "filePath": "test_base\\bluebird\\src\\promise.js",
+    "usedDeclarations": [
+      "TypeError = Promise.TypeError = errors.TypeError",
+      "util = require(\"./util\")"
+    ],
+    "snippets": [],
+    "comments": []
+  },
+  "Promise": {
+    "params": [
+      "executor"
+    ],
+    "body": "{\n  if (executor !== INTERNAL) {\n    check(this, executor);\n  }\n  this._bitField = NO_STATE;\n  this._fulfillmentHandler0 = undefined;\n  this._rejectionHandler0 = undefined;\n  this._promise0 = undefined;\n  this._receiver0 = undefined;\n  this._resolveFromExecutor(executor);\n  this._promiseCreated();\n  this._fireEvent(\"promiseCreated\", this);\n}",
+    "functionDeclaration": "function Promise(executor) {}",
+    "filePath": "test_base\\bluebird\\src\\promise.js",
+    "usedDeclarations": [
+      "INTERNAL = function () {}"
+    ],
+    "snippets": [
+      "fs.readFile(\"file.json\", function (err, val) {\n    if (err) {\n        console.error(\"unable to read file\");\n    }\n    else {\n        try {\n            val = JSON.parse(val);\n            console.log(val.success);\n        }\n        catch (e) {\n            console.error(\"invalid json in file\");\n        }\n    }\n});\n",
+      "fs.readFileAsync(\"file.json\").then(JSON.parse).then(function (val) {\n    console.log(val.success);\n})\n.catch(SyntaxError, function (e) {\n    console.error(\"invalid json in file\");\n})\n.catch(function (e) {\n    console.error(\"unable to read file\");\n});\n",
+      "try {\n    var val = JSON.parse(fs.readFileSync(\"file.json\"));\n    console.log(val.success);\n}\n// Gecko-only syntax; used for illustrative purposes\ncatch (e if e instanceof SyntaxError) {\n    console.error(\"invalid json in file\");\n}\ncatch (e) {\n    console.error(\"unable to read file\");\n}\n",
+      "//Copyright Plato http://stackoverflow.com/a/19385911/995876\n//CC BY-SA 2.5\nmapSeries(URLs, function (URL, done) {\n    var options = {};\n    needle.get(URL, options, function (error, response, body) {\n        if (error) {\n            return done(error);\n        }\n        try {\n            var ret = JSON.parse(body);\n            return done(null, ret);\n        }\n        catch (e) {\n            done(e);\n        }\n    });\n}, function (err, results) {\n    if (err) {\n        console.log(err);\n    } else {\n        console.log('All Needle requests successful');\n        // results is a 1 to 1 mapping in order of URLs > needle.body\n        processAndSaveAllInDB(results, function (err) {\n            if (err) {\n                return done(err);\n            }\n            console.log('All Needle requests saved');\n            done(null);\n        });\n    }\n});\n",
+      "Promise.promisifyAll(needle);\nvar options = {};\n\nvar current = Promise.resolve();\nPromise.map(URLs, function (URL) {\n    current = current.then(function () {\n        return needle.getAsync(URL, options);\n    });\n    return current;\n}).map(function (responseAndBody) {\n    return JSON.parse(responseAndBody[1]);\n}).then(function (results) {\n    return processAndSaveAllInDB(results);\n}).then(function () {\n    console.log('All Needle requests saved');\n}).catch(function (e) {\n    console.log(e);\n});\n"
+    ],
+    "comments": []
+  },
+  "promisifyAll": {
+    "params": [
+      "obj",
+      "suffix",
+      "filter",
+      "promisifier",
+      "multiArgs"
+    ],
+    "body": "{\n  ASSERT(typeof suffix === \"string\");\n  ASSERT(typeof filter === \"function\");\n  var suffixRegexp = new RegExp(escapeIdentRegex(suffix) + \"$\");\n  var methods = promisifiableMethods(obj, suffix, suffixRegexp, filter);\n  for (var i = 0, len = methods.length; i < len; i += 2) {\n    var key = methods[i];\n    var fn = methods[i + 1];\n    var promisifiedKey = key + suffix;\n    if (promisifier === makeNodePromisified) {\n      obj[promisifiedKey] = makeNodePromisified(key, THIS, key, fn, suffix, multiArgs);\n    } else {\n      var promisified = promisifier(fn, function () {\n        return makeNodePromisified(key, THIS, key, fn, suffix, multiArgs);\n      });\n      util.notEnumerableProp(promisified, \"__isPromisified__\", true);\n      obj[promisifiedKey] = promisified;\n    }\n  }\n  util.toFastProperties(obj);\n  return obj;\n}",
+    "functionDeclaration": "function promisifyAll(obj, suffix, filter, promisifier, multiArgs) {}",
+    "filePath": "test_base\\bluebird\\src\\promisify.js",
+    "usedDeclarations": [
+      "ASSERT = require(\"./assert\")",
+      "escapeIdentRegex = function (str) {\n  return str.replace(/([$])/, \"\\\\$\");\n}",
+      "i = 0",
+      "key = keys[i]",
+      "fn = nodebackForPromise(promise, multiArgs)",
+      "makeNodePromisified = canEvaluate ? makeNodePromisifiedEval : makeNodePromisifiedClosure",
+      "THIS = {}",
+      "util = require(\"./util\")"
+    ],
+    "snippets": [
+      "Promise.promisifyAll(\n    Object target,\n    [Object {\n        suffix: String=\"AsyncTest\",\n        multiArgs: boolean=false,\n        filter: boolean function(String name, function func, Object target, boolean passesDefaultFilter),\n        promisifier: function(function originalFunction, function defaultPromisifier)\n    } options]\n) -> Object\n",
+      "Promise.promisifyAll(require(\"redis\"));\n\n//Later on, all redis client instances have promise returning functions:\n\nredisClient.hexistsAsync(\"myhash\", \"field\").then(function(v) {\n\n}).catch(function(e) {\n\n});\n",
+      "var fs = Promise.promisifyAll(require(\"fs\"));\n\nfs.readFileAsync(\"myfile.js\", \"utf8\").then(function(contents) {\n    console.log(contents);\n}).catch(function(e) {\n    console.error(e.stack);\n});\n",
+      "var fs = Promise.promisifyAll(require(\"fs\"), {suffix: \"MySuffix\"});\nfs.readFileMySuffix(...).then(...);\n",
+      "module.exports = function myPromisifyAll(target) {\n    return Promise.promisifyAll(target, {suffix: \"MySuffix\"});\n};\n",
+      "Promise.promisifyAll(something, {\n    filter: function(name) {\n        return name === \"theMultiArgMethodIwant\";\n    },\n    multiArgs: true\n});\n// Rest of the methods\nPromise.promisifyAll(something);\n",
+      "Promise.promisifyAll(..., {\n    filter: function(name, func, target, passesDefaultFilter) {\n        // name = the property name to be promisified without suffix\n        // func = the function\n        // target = the target object where the promisified func will be put with name + suffix\n        // passesDefaultFilter = whether the default filter would be passed\n        // return boolean (return value is coerced, so not returning anything is same as returning false)\n\n        return passesDefaultFilter && ...\n    }\n})\n",
+      "function DOMPromisifier(originalMethod) {\n    // return a function\n    return function promisified() {\n        var args = [].slice.call(arguments);\n        // Needed so that the original method can be called with the correct receiver\n        var self = this;\n        // which returns a promise\n        return new Promise(function(resolve, reject) {\n            args.push(resolve, reject);\n            originalMethod.apply(self, args);\n        });\n    };\n}\n\n// Promisify e.g. chrome.browserAction\nPromise.promisifyAll(chrome.browserAction, {promisifier: DOMPromisifier});\n\n// Later\nchrome.browserAction.getTitleAsync({tabId: 1})\n    .then(function(result) {\n\n    });\n",
+      "var Promise = require(\"bluebird\");\nvar restler = require(\"restler\");\nvar methodNamesToPromisify = \"get post put del head patch json postJson putJson\".split(\" \");\n\nfunction EventEmitterPromisifier(originalMethod) {\n    // return a function\n    return function promisified() {\n        var args = [].slice.call(arguments);\n        // Needed so that the original method can be called with the correct receiver\n        var self = this;\n        // which returns a promise\n        return new Promise(function(resolve, reject) {\n            // We call the originalMethod here because if it throws,\n            // it will reject the returned promise with the thrown error\n            var emitter = originalMethod.apply(self, args);\n\n            emitter\n                .on(\"success\", function(data, response) {\n                    resolve([data, response]);\n                })\n                .on(\"fail\", function(data, response) {\n                    // Erroneous response like 400\n                    resolve([data, response]);\n                })\n                .on(\"error\", function(err) {\n                    reject(err);\n                })\n                .on(\"abort\", function() {\n                    reject(new Promise.CancellationError());\n                })\n                .on(\"timeout\", function() {\n                    reject(new Promise.TimeoutError());\n                });\n        });\n    };\n};\n\nPromise.promisifyAll(restler, {\n    filter: function(name) {\n        return methodNamesToPromisify.indexOf(name) > -1;\n    },\n    promisifier: EventEmitterPromisifier\n});\n\n// ...\n\n// Later in some other file\n\nvar restler = require(\"restler\");\nrestler.getAsync(\"http://...\", ...,).spread(function(data, response) {\n\n})\n",
+      "var fs = Promise.promisifyAll(require(\"fs\"), {\n    promisifier: function(originalFunction, defaultPromisifer) {\n        var promisified = defaultPromisifier(originalFunction);\n\n        return function() {\n            // Enhance normal promisification by supporting promises as\n            // arguments\n\n            var args = [].slice.call(arguments);\n            var self = this;\n            return Promise.all(args).then(function(awaitedArgs) {\n                return promisified.apply(self, awaitedArgs);\n            });\n        };\n    }\n});\n\n// All promisified fs functions now await their arguments if they are promises\nvar version = fs.readFileAsync(\"package.json\", \"utf8\").then(JSON.parse).get(\"version\");\nfs.writeFileAsync(\"the-version.txt\", version, \"utf8\");\n",
+      "var Pool = require(\"mysql/lib/Pool\");\nvar Connection = require(\"mysql/lib/Connection\");\nPromise.promisifyAll([Pool, Connection]);\n"
+    ],
+    "comments": []
+  },
+  "promisify": {
+    "params": [
+      "callback",
+      "receiver",
+      "multiArgs"
+    ],
+    "body": "{\n  return makeNodePromisified(callback, receiver, undefined, callback, null, multiArgs);\n}",
+    "functionDeclaration": "function promisify(callback, receiver, multiArgs) {}",
+    "filePath": "test_base\\bluebird\\src\\promisify.js",
+    "usedDeclarations": [
+      "makeNodePromisified = canEvaluate ? makeNodePromisifiedEval : makeNodePromisifiedClosure"
+    ],
+    "snippets": [
+      "var fs = Promise.promisify(require(\"fs\"));\n",
+      "var fs = Promise.promisifyAll(require(\"fs\"));\n",
+      "function wrapWithPromise(parameter) {\n    return new Promise(function (resolve, reject) {\n        doSomethingAsync({\n              error:reject,\n              success:resolve\n        });\n    });\n}\n",
+      "function returnThree(){ return 3;}\n\nPromise.resolve(5).map(returnThree).then(function(val){\n     console.log(\"Hello Value!\",val);\n});\n",
+      "function returnThree(){ return 3;}\n\nPromise.resolve([5]).map(returnThree).then(function(val){\n     console.log(\"Hello Value!\",val);\n});\n",
+      "function nextFunction(something){ return Promise.resolve(something*3); }\n\nmyFunction()\n    .then(result => nextFunction(result)); // We are implicitly returning a Promise\n",
+      "function nextFunction(something){ return Promise.resolve(something*3); }\n\nmyFunction().then(result => {\n    console.log(\"Debug:\", result);\n    nextFunction(result)); // The chain is broken! We don't return anything to the .then() call\n});\n",
+      "function nextFunction(something){ return Promise.resolve(something*3); }\n\nmyFunction().then(result => {\n    console.log(\"Debug:\", result);\n    return nextFunction(result)); // The anonymous function returns the function which returns the promise .then() needs\n});\n"
+    ],
+    "comments": [
+      "Error: the promise constructor requires a resolver function",
+      "Error: the promise constructor cannot be invoked directly",
+      "Error: expecting an array, a promise or a thenable"
+    ]
+  },
+  "props": {
+    "params": [
+      "promises"
+    ],
+    "body": "{\n  var ret;\n  var castValue = tryConvertToPromise(promises);\n  if (!isObject(castValue)) {\n    return apiRejection(PROPS_TYPE_ERROR);\n  } else if (castValue instanceof Promise) {\n    ret = castValue._then(Promise.props, undefined, undefined, undefined, undefined);\n  } else {\n    ret = new PropertiesPromiseArray(castValue).promise();\n  }\n  if (castValue instanceof Promise) {\n    ret._propagateFrom(castValue, PROPAGATE_BIND);\n  }\n  return ret;\n}",
+    "functionDeclaration": "function props(promises) {}",
+    "filePath": "test_base\\bluebird\\src\\props.js",
+    "usedDeclarations": [
+      "ret = new Es6Map()",
+      "isObject = util.isObject"
+    ],
+    "snippets": [
+      ".props() -> Promise\n"
+    ],
+    "comments": []
+  },
+  "race": {
+    "params": [
+      "promises",
+      "parent"
+    ],
+    "body": "{\n  var maybePromise = tryConvertToPromise(promises);\n  if (maybePromise instanceof Promise) {\n    return raceLater(maybePromise);\n  } else {\n    promises = util.asArray(promises);\n    if (promises === null) return apiRejection(COLLECTION_ERROR + util.classString(promises));\n  }\n  var ret = new Promise(INTERNAL);\n  if (parent !== undefined) {\n    ret._propagateFrom(parent, PROPAGATE_ALL);\n  }\n  var fulfill = ret._fulfill;\n  var reject = ret._reject;\n  for (var i = 0, len = promises.length; i < len; ++i) {\n    var val = promises[i];\n    if (val === undefined && !((i in promises))) {\n      continue;\n    }\n    Promise.cast(val)._then(fulfill, reject, undefined, ret, null);\n  }\n  return ret;\n}",
+    "functionDeclaration": "function race(promises, parent) {}",
+    "filePath": "test_base\\bluebird\\src\\race.js",
+    "usedDeclarations": [
+      "raceLater = function (promise) {\n  return promise.then(function (array) {\n    return race(array, promise);\n  });\n}",
+      "util = require(\"./util\")"
+    ],
+    "snippets": [
+      ".race() -> Promise\n"
+    ],
+    "comments": []
+  },
+  "reduce": {
+    "params": [
+      "promises",
+      "fn",
+      "initialValue",
+      "_each"
+    ],
+    "body": "{\n  if (typeof fn !== \"function\") {\n    return apiRejection(FUNCTION_ERROR + util.classString(fn));\n  }\n  var array = new ReductionPromiseArray(promises, fn, initialValue, _each);\n  return array.promise();\n}",
+    "functionDeclaration": "function reduce(promises, fn, initialValue, _each) {}",
+    "filePath": "test_base\\bluebird\\src\\reduce.js",
+    "usedDeclarations": [
+      "util = require(\"./util\")"
+    ],
+    "snippets": [
+      ".reduce(\n    function(any accumulator, any item, int index, int length) reducer,\n    [any initialValue]\n) -> Promise\n"
+    ],
+    "comments": []
+  },
+  "schedule": {
+    "params": [
+      "task",
+      "queued"
+    ],
+    "body": "{\n  var worker = workers.filter(function (worker) {\n    return task.isolated ? !worker.hasTasks() : !worker._runningIsolatedTask;\n  }).sort(leastTotalRunningTime)[0];\n  if (!worker) {\n    if (!queued) tasks.push(task);\n    return false;\n  } else {\n    assert(task.isolated ? !worker.hasTasks() : true);\n    debug(\"found free worker\", worker._id, \"for task\", task.id);\n    worker.performTask(task);\n    return true;\n  }\n}",
+    "functionDeclaration": "function schedule(task, queued) {}",
+    "filePath": "test_base\\bluebird\\tools\\job-runner\\job-runner.js",
+    "usedDeclarations": [
+      "workers = []",
+      "tasks = []",
+      "assert = require(\"assert\")"
+    ],
+    "snippets": [
+      "Promise.setScheduler(function(function fn) scheduler) -> function\n",
+      "// This is just an example of how to use the api, there is no reason to do this\nPromise.setScheduler(function(fn) {\n    setTimeout(fn, 0);\n});\n",
+      "// This will synchronize bluebird promise queue flushing with angulars queue flushing\n// Angular is also now responsible for choosing the actual scheduler\nPromise.setScheduler(function(fn) {\n    $rootScope.$evalAsync(fn);\n});\n"
+    ],
+    "comments": []
+  },
+  "some": {
+    "params": [
+      "promises",
+      "howMany"
+    ],
+    "body": "{\n  if ((howMany | 0) !== howMany || howMany < 0) {\n    return apiRejection(POSITIVE_INTEGER_ERROR);\n  }\n  var ret = new SomePromiseArray(promises);\n  var promise = ret.promise();\n  ASSERT(promise.isPending());\n  ASSERT(ret instanceof SomePromiseArray);\n  ret.setHowMany(howMany);\n  ret.init();\n  return promise;\n}",
+    "functionDeclaration": "function some(promises, howMany) {}",
+    "filePath": "test_base\\bluebird\\src\\some.js",
+    "usedDeclarations": [
+      "ASSERT = require(\"./assert\")"
+    ],
+    "snippets": [
+      ".some(int count) -> Promise\n"
+    ],
+    "comments": []
+  },
+  "PromiseInspection": {
+    "params": [
+      "promise"
+    ],
+    "body": "{\n  if (promise !== undefined) {\n    promise = promise._target();\n    this._bitField = promise._bitField;\n    this._settledValueField = promise._isFateSealed() ? promise._settledValue() : undefined;\n  } else {\n    this._bitField = 0;\n    this._settledValueField = undefined;\n  }\n}",
+    "functionDeclaration": "function PromiseInspection(promise) {}",
+    "filePath": "test_base\\bluebird\\src\\synchronous_inspection.js",
+    "usedDeclarations": [],
+    "snippets": [
+      "interface PromiseInspection {\n    any reason()\n    any value()\n    boolean isPending()\n    boolean isRejected()\n    boolean isFulfilled()\n    boolean isCancelled()\n}\n"
+    ],
+    "comments": []
+  },
+  "resolve": {
+    "params": [
+      "value"
+    ],
+    "body": "{\n  if (!promise) return;\n  promise._resolveCallback(value);\n  promise = null;\n}",
+    "functionDeclaration": "function resolve(value) {}",
+    "filePath": "test_base\\bluebird\\src\\thenables.js",
+    "usedDeclarations": [
+      "promise = new Promise(INTERNAL)"
+    ],
+    "snippets": [
+      "Promise.resolve(Promise<any>|any value) -> Promise\n",
+      "var someCachedValue;\n\nvar getValue = function() {\n    if (someCachedValue) {\n        return Promise.resolve(someCachedValue);\n    }\n\n    return db.queryAsync().then(function(value) {\n        someCachedValue = value;\n        return value;\n    });\n};\n",
+      "Promise.resolve($.get(\"http://www.google.com\")).then(function() {\n    //Returning a thenable from a handler is automatically\n    //cast to a trusted Promise as per Promises/A+ specification\n    return $.post(\"http://www.yahoo.com\");\n}).then(function() {\n\n}).catch(function(e) {\n    //jQuery doesn't throw real errors so use catch-all\n    console.log(e.statusText);\n});\n"
+    ],
+    "comments": []
+  },
+  "reject": {
+    "params": [
+      "reason"
+    ],
+    "body": "{\n  if (!promise) return;\n  promise._rejectCallback(reason, synchronous, true);\n  promise = null;\n}",
+    "functionDeclaration": "function reject(reason) {}",
+    "filePath": "test_base\\bluebird\\src\\thenables.js",
+    "usedDeclarations": [
+      "promise = new Promise(INTERNAL)",
+      "synchronous = true"
+    ],
+    "snippets": [
+      ".suppressUnhandledRejections() -> undefined\n",
+      "somePromise.catch(function(){});\n",
+      "var tweets = fetchTweets();\n$(document).on(\"ready\", function() {\n    tweets.then(function() {\n        // Render tweets\n    }).catch(function(e) {\n        alert(\"failed to fetch tweets because: \" + e);\n    });\n});\n",
+      "var tweets = fetchTweets();\ntweets.suppressUnhandledRejections();\n$(document).on(\"ready\", function() {\n    tweets.then(function() {\n        // Render tweets\n    }).catch(function(e) {\n        alert(\"failed to fetch tweets because: \" + e);\n    });\n});\n",
+      "fetchTweets()\n    .finally(function() {\n        return $.ready.promise();\n    })\n    // DOM guaranteed to be ready after this point\n    .then(function() {\n        // Render tweets\n    })\n    .catch(function(e) {\n        alert(\"failed to fetch tweets because: \" + e);\n    });\n"
+    ],
+    "comments": []
+  },
+  "dispose": {
+    "params": [
+      "resources",
+      "inspection"
+    ],
+    "body": "{\n  var i = 0;\n  var len = resources.length;\n  var ret = new Promise(INTERNAL);\n  function iterator() {\n    if (i >= len) return ret._fulfill();\n    var maybePromise = castPreservingDisposable(resources[i++]);\n    if (maybePromise instanceof Promise && maybePromise._isDisposable()) {\n      try {\n        maybePromise = tryConvertToPromise(maybePromise._getDisposer().tryDispose(inspection), resources.promise);\n      } catch (e) {\n        return thrower(e);\n      }\n      if (maybePromise instanceof Promise) {\n        return maybePromise._then(iterator, thrower, null, null, null);\n      }\n    }\n    iterator();\n  }\n  iterator();\n  return ret;\n}",
+    "functionDeclaration": "function dispose(resources, inspection) {}",
+    "filePath": "test_base\\bluebird\\src\\using.js",
+    "usedDeclarations": [
+      "maybePromise = tryConvertToPromise(thenable)"
+    ],
+    "snippets": [
+      ".disposer(function(any resource, Promise usingOutcomePromise) disposer) -> Disposer\n",
+      "// This function doesn't return a promise but a Disposer\n// so it's very hard to use it wrong (not passing it to `using`)\nfunction getConnection() {\n    return db.connect().disposer(function(connection, promise) {\n        connection.close();\n    });\n}\n",
+      "function useConnection(query) {\n  return Promise.using(getConnection(), function(connection) {\n    return connection.sendQuery(query).then(function(results) {\n      return process(results);\n    })\n  });\n}\n",
+      "var pg = require(\"pg\");\n// Uncomment if pg has not been properly promisified yet\n//var Promise = require(\"bluebird\");\n//Promise.promisifyAll(pg, {\n//    filter: function(methodName) {\n//        return methodName === \"connect\"\n//    },\n//    multiArgs: true\n//});\n// Promisify rest of pg normally\n//Promise.promisifyAll(pg);\n\nfunction getSqlConnection(connectionString) {\n    var close;\n    return pg.connectAsync(connectionString).spread(function(client, done) {\n        close = done;\n        return client;\n    }).disposer(function() {\n        if (close) close();\n    });\n}\n\nmodule.exports = getSqlConnection;\n",
+      "var mysql = require(\"mysql\");\n// Uncomment if mysql has not been properly promisified yet\n// var Promise = require(\"bluebird\");\n// Promise.promisifyAll(mysql);\n// Promise.promisifyAll(require(\"mysql/lib/Connection\").prototype);\n// Promise.promisifyAll(require(\"mysql/lib/Pool\").prototype);\nvar pool  = mysql.createPool({\n    connectionLimit: 10,\n    host: 'example.org',\n    user: 'bob',\n    password: 'secret'\n});\n\nfunction getSqlConnection() {\n    return pool.getConnectionAsync().disposer(function(connection) {\n        connection.release();\n    });\n}\n\nmodule.exports = getSqlConnection;\n",
+      "function withTransaction(fn) {\n  return Promise.using(pool.acquireConnection(), function(connection) {\n    var tx = connection.beginTransaction()\n    return Promise\n      .try(fn, tx)\n      .then(function(res) { return connection.commit().thenReturn(res) },\n            function(err) {\n              return connection.rollback()\n                     .catch(function(e) {/* maybe add the rollback error to err */})\n                     .thenThrow(err);\n            });\n  });\n}\n\n// If the withTransaction block completes successfully, the transaction is automatically committed\n// Any error or rejection will automatically roll it back\n\nwithTransaction(function(tx) {\n    return tx.queryAsync(...).then(function() {\n        return tx.queryAsync(...)\n    }).then(function() {\n        return tx.queryAsync(...)\n    });\n});\n"
+    ],
+    "comments": []
+  },
+  "T": {
+    "params": [],
+    "body": "{\n  this.constructor = Child;\n  this.constructor$ = Parent;\n  for (var propertyName in Parent.prototype) {\n    if (hasProp.call(Parent.prototype, propertyName) && propertyName.charAt(propertyName.length - 1) !== \"$\") {\n      this[propertyName + \"$\"] = Parent.prototype[propertyName];\n    }\n  }\n}",
+    "functionDeclaration": "function T() {}",
+    "filePath": "test_base\\bluebird\\src\\util.js",
+    "usedDeclarations": [
+      "hasProp = ({}).hasOwnProperty"
+    ],
+    "snippets": [],
+    "comments": []
+  },
+  "env": {
+    "params": [
+      "key"
+    ],
+    "body": "{\n  return hasEnvVariables ? process.env[key] : undefined;\n}",
+    "functionDeclaration": "function env(key) {}",
+    "filePath": "test_base\\bluebird\\src\\util.js",
+    "usedDeclarations": [
+      "key = keys[i]",
+      "hasEnvVariables = typeof process !== \"undefined\" && typeof process.env !== \"undefined\""
+    ],
+    "snippets": [],
+    "comments": []
+  },
+  "each": {
+    "params": [
+      "fn"
+    ],
+    "body": "{\n  if (typeof fn === \"string\") {\n    var args = [].slice.call(arguments, 1);\n    return workers.forEach(function (worker) {\n      worker[fn].apply(worker, args);\n    });\n  }\n  return workers.forEach(fn);\n}",
+    "functionDeclaration": "function each(fn) {}",
+    "filePath": "test_base\\bluebird\\tools\\job-runner\\job-runner.js",
+    "usedDeclarations": [
+      "workers = []"
+    ],
+    "snippets": [
+      "Promise.each(\n    Iterable<any>|Promise<Iterable<any>> input,\n    function(any value, int index, int arrayLength) iterator\n) -> Promise<Array<any>>\n",
+      "// The array to be iterated over can be a mix of values and promises.\nvar fileNames = [\"1.txt\", Promise.resolve(\"2.txt\"), \"3.txt\", Promise.delay(3000, \"4.txt\"), \"5.txt\"];\n\nPromise.each(fileNames, function(fileName, index, arrayLength) {\n    // The iteration will be performed sequentially, awaiting for any\n    // promises in the process.\n    return fs.readFileAsync(fileName).then(function(fileContents) {\n        // ...\n\n        // The final resolution value of the iterator is is irrelevant,\n        // since the result of the `Promise.each` has nothing to do with\n        // the outputs of the iterator.\n        return \"anything\"; // Doesn't matter\n    });\n}).then(function(result) {\n    // This will run after the last step is done\n    console.log(\"Done!\")\n    console.log(result); // [\"1.txt\", \"2.txt\", \"3.txt\", \"4.txt\", \"5.txt\"]\n});\n",
+      "let stories = [ '8952', '8884'];\nPromise.each(stories, (item, idx, length) => {\n   return request.getAsync(`https://hacker-news.firebaseio.com/v0/item/${item}.json?print=pretty`)\n   .then(res => {\n      // need to do explicit operations here\n   })\n})\n.then(result => {\n console.log('ALL done', result);//['8952', '8884']\n})\n\n",
+      "// If one of the promises in the original array rejects,\n// the iteration will stop once it reaches it\nvar items = [\"A\", Promise.delay(8000, \"B\"), Promise.reject(\"C\"), \"D\"];\n\nPromise.each(items, function(item) {\n    return Promise.delay(4000).then(function() {\n        console.log(\"On iterator: \" + item);\n    });\n}).then(function(result) {\n    // This not run\n}).catch(function(rejection) {\n    console.log(\"Catch: \" + rejection);\n});\n\n// The code above outputs the following after 12 seconds (not 16!):\n// On iterator: A\n// On iterator: B\n// Catch: C\n"
+    ],
+    "comments": []
+  },
+  "bind": {
+    "params": [
+      "fn",
+      "ctx"
+    ],
+    "body": "{\n  return function () {\n    return fn.apply(ctx, arguments);\n  };\n}",
+    "functionDeclaration": "function bind(fn, ctx) {}",
+    "filePath": "test_base\\bluebird\\tools\\job-runner\\job-runner.js",
+    "usedDeclarations": [],
+    "snippets": [],
+    "comments": [
+      "[v1.0.1](https://github.com/ljharb/call-bind/compare/v1.0.0...v1.0.1) - 2021-01-08"
+    ]
+  },
+  "log": {
+    "params": [
+      "value"
+    ],
+    "body": "{\n  process.stdout.write(value.stdout);\n  process.stderr.write(value.stderr);\n}",
+    "functionDeclaration": "function log(value) {}",
+    "filePath": "test_base\\bluebird\\tools\\jshint.js",
+    "usedDeclarations": [],
+    "snippets": [
+      "var argv = require('yargs')\n  .epilogue('for more information, find our manual at http://example.com');\n"
+    ],
+    "comments": []
+  },
+  "run": {
+    "params": [
+      "cmd",
+      "args",
+      "dir",
+      "log"
+    ],
+    "body": "{\n  return new Promise(function (resolve, reject) {\n    function makeResult(errorMessage) {\n      var ret = errorMessage ? new Error(errorMessage) : {};\n      ret.stdout = out.trim();\n      ret.stderr = err.trim();\n      return ret;\n    }\n    var out = \"\";\n    var err = \"\";\n    var c = spawn(cmd, args, {\n      stdin: [\"ignore\", \"ignore\", \"ignore\"],\n      cwd: dir || process.cwd()\n    });\n    c.stdout.on(\"data\", function (data) {\n      if (log) process.stdout.write(data.toString());\n      out += data;\n    });\n    c.stderr.on(\"data\", function (data) {\n      if (log) process.stderr.write(data.toString());\n      err += data;\n    });\n    c.on(\"error\", function (err) {\n      reject(makeResult(err.message));\n    });\n    c.on(\"close\", function (code) {\n      if (code == 0) resolve(makeResult()); else reject(makeResult(path.basename(cmd) + \" exited with code: \" + code + \"\\n\" + err.trim()));\n    });\n  });\n}",
+    "functionDeclaration": "function run(cmd, args, dir, log) {}",
+    "filePath": "test_base\\bluebird\\tools\\utils.js",
+    "usedDeclarations": [
+      "Promise = require(\"bluebird\")",
+      "spawn = require(\"cross-spawn\")",
+      "code = \"U+\" + (\"0000\" + line.charCodeAt(col - 1).toString(16)).slice(-4)",
+      "path = require(\"path\")"
+    ],
+    "snippets": [],
+    "comments": []
+  }
+}

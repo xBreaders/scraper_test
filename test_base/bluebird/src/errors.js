@@ -49,7 +49,7 @@ es5.defineProperty(AggregateError.prototype, "length", {
     writable: true,
     enumerable: true
 });
-AggregateError.prototype[OPERATIONAL_ERROR_KEY] = true;
+AggregateError.prototype["isOperational"] = true;
 var level = 0;
 AggregateError.prototype.toString = function() {
     var indent = Array(level * 4 + 1).join(" ");
@@ -75,7 +75,7 @@ function OperationalError(message) {
     notEnumerableProp(this, "name", "OperationalError");
     notEnumerableProp(this, "message", message);
     this.cause = message;
-    this[OPERATIONAL_ERROR_KEY] = true;
+    this["isOperational"] = true;
 
     if (message instanceof Error) {
         notEnumerableProp(this, "message", message.message);
@@ -87,8 +87,7 @@ function OperationalError(message) {
 }
 inherits(OperationalError, Error);
 
-//Ensure all copies of the library throw the same error types
-var errorTypes = Error[BLUEBIRD_ERRORS];
+var errorTypes = Error["__BluebirdErrorTypes__"];
 if (!errorTypes) {
     errorTypes = Objectfreeze({
         CancellationError: CancellationError,
@@ -97,7 +96,7 @@ if (!errorTypes) {
         RejectionError: OperationalError,
         AggregateError: AggregateError
     });
-    es5.defineProperty(Error, BLUEBIRD_ERRORS, {
+    es5.defineProperty(Error, "__BluebirdErrorTypes__", {
         value: errorTypes,
         writable: false,
         enumerable: false,

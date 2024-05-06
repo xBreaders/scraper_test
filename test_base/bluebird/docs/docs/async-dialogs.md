@@ -1,6 +1,6 @@
 ---
 id: async-dialogs
-title: Async Dialogs
+title: AsyncTest Dialogs
 ---
 
 [async-dialogs](unfinished-article)
@@ -19,7 +19,7 @@ our own DOM based prompt. To begin, here is a template for a simple HTML page:
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Async Dislogs Example</title>
+  <title>AsyncTest Dislogs Example</title>
   <script src="//cdn.jsdelivr.net/bluebird/{{ site.version }}/bluebird.js"></script>
   <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
