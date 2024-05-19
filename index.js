@@ -101,7 +101,7 @@ class FunctionMiner {
                 if (item !== 'node_modules') { // Exclude the node_modules directory
                     files.push(...this.findAllJSFiles(itemPath));
                 }
-            } else if (path.extname(itemPath) === '.js' && (itemPath.includes('\\test\\') === false && itemPath.includes('benchmark') === false && itemPath.includes('examples') === false && itemPath.includes("coverage") === false)) {
+            } else if (path.extname(itemPath) === '.js' && (!itemPath.includes('\\test\\')  && !itemPath.includes("tools") && !itemPath.includes("debug") && !itemPath.includes('benchmark') && !itemPath.includes('examples') && !itemPath.includes("coverage"))) {
                 files.push(itemPath);
             }
         }
@@ -114,6 +114,7 @@ class FunctionMiner {
         const ast = this.parseJS(fileContent);
 
         const declarations = new Map();
+        const functionsInFile = {};
 
         walk(ast, {
             enter: (node, parent) => {
@@ -159,28 +160,39 @@ class FunctionMiner {
                         },
                     });
 
-                    this.minedFunctions[functionName] = {
+                    functionsInFile[functionName] = {
                         params,
                         body: functionBody,
                         functionDeclaration, // Add the function declaration here
-                        filePath,
                         usedDeclarations: Array.from(usedDeclarations.values()),
                     };
                 }
             },
         });
+
+        this.minedFunctions[filePath] = {
+            filePath,
+            fileContent,
+            functions: functionsInFile
+        };
     }
+
 
     parseJS(code) {
         // Use a JavaScript parser like @babel/parser or acorn here
         // Example using @babel/parser:
 
-         return parseAcorn(code, { allowReturnOutsideFunction : true });
+        try {
+            return parseAcorn(code, {allowReturnOutsideFunction: true , sourceType: "module"});
+        }
+        catch (e) {
+            console.error('Error parsing code:', e);
+        }
     }
 }
 
 // Example usage
-const packagePath = 'test_base/bluebird';
+const packagePath = 'node_modules/fs-extra';
 const docMiner = new DocumentationMiner(packagePath);
 const docs = await docMiner.extractDocumentation();
 const functionMiner = new FunctionMiner(packagePath);
@@ -189,21 +201,14 @@ const functions = await functionMiner.extractFunctions();
 // Combine information from both miners
 for (const docKey in docs) {
     for (const functionKey in functions) {
+
         if (docKey.includes(functionKey)) {
+
             functions[functionKey].snippets = docs[docKey].snippets;
             functions[functionKey].comments = docs[docKey].comments;
         }
     }
 }
-console.log(functions);
-console.log(docs)
 
-//write the ones that have snippets in them to a json file
-let functionsWithSnippets = {};
-for (const functionKey in functions) {
-    if (functions[functionKey].snippets != null) {
-        functionsWithSnippets[functionKey] = functions[functionKey];
-    }
-}
 
-fs.writeFileSync('scraper_output/functions_with_snippets.json', JSON.stringify(functionsWithSnippets, null, 2));
+fs.writeFileSync('scraper_output/functions_with_snippets.json', JSON.stringify(functions, null, 2));
