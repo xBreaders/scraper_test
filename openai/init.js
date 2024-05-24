@@ -6,7 +6,7 @@ import {TestFile} from "../gemini/entities/errorPrompt.js";
 import {sleep} from "openai/core";
 
 const openai = new OpenAI({
-    apiKey: "sk-proj-FnRfVQqOFtkYvufQg5WVT3BlbkFJi5MVtHaGGymW4WIuQNSQ",
+    apiKey: process.env.API_KEY_OPENAI,
 });
 
 

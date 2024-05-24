@@ -6,9 +6,9 @@ import {Parser as acorn} from 'acorn';
 import {generate} from 'astring';
 import {sleep} from "openai/core";
 
-const PROJECT_ID = 'inspired-nomad-422117-j3';
+const PROJECT_ID = process.env.PROJECT;
 const LOCATION = 'us-central1';
-const MODEL_NAME = 'gemini-1.5-flash-preview-0514';
+const MODEL_NAME = process.env.MODEL_NAME;
 
 const vertexAI = new VertexAI({project: PROJECT_ID, location: LOCATION});
 const generativeModel = vertexAI.preview.getGenerativeModel({
