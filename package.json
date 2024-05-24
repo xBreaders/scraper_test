@@ -11,24 +11,50 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/aiplatform": "^3.20.0",
     "@google-cloud/vertexai": "^1.1.0",
+    "@jest/globals": "^29.7.0",
     "acorn": "^8.11.3",
     "astring": "^1.8.6",
+    "async": "^3.2.5",
     "bluebird": "^3.7.2",
     "doctrine": "^3.0.0",
     "estree-walker": "^3.0.3",
     "fs": "^0.0.1-security",
+    "fs-extra": "^11.2.0",
     "glob": "^10.3.12",
     "jest": "^29.7.0",
     "lodash": "^4.17.21",
     "markdown-it": "^14.1.0",
     "mocha": "^10.4.0",
+    "openai": "^4.47.1",
     "path": "^0.12.7",
+    "path-scurry": "^1.11.1",
     "remark": "^15.0.1",
     "strip-markdown": "^6.0.0"
   },
   "devDependencies": {
     "@babel/generator": "^7.24.5",
     "nyc": "^15.1.0"
+  },
+  "jest": {
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "clover"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 60,
+        "branches": 60,
+        "functions": 60,
+        "lines": 30
+      }
+    },
+    "watchPlugins": [
+      "./jest_plugin/watchPlugin"
+    ]
   }
 }

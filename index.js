@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import MarkdownIt from 'markdown-it';
-import { parse as parseDoctrine } from 'doctrine'; // For parsing JSDoc comments
-import { walk } from 'estree-walker'; // For traversing AST
+import {parse as parseDoctrine} from 'doctrine'; // For parsing JSDoc comments
+import {walk} from 'estree-walker'; // For traversing AST
 import {parse as parseAcorn} from 'acorn'; // For parsing JavaScript code
-import { generate } from 'astring'; // For generating JavaScript code
+import {generate} from 'astring'; // For generating JavaScript code
 
 
 class DocumentationMiner {
@@ -192,7 +192,7 @@ class FunctionMiner {
 }
 
 // Example usage
-const packagePath = 'node_modules/fs-extra';
+const packagePath = 'node_modules/lodash';
 const docMiner = new DocumentationMiner(packagePath);
 const docs = await docMiner.extractDocumentation();
 const functionMiner = new FunctionMiner(packagePath);
